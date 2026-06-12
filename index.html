@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mini Compiler</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: "Segoe UI", sans-serif;
+            background: linear-gradient(135deg,#0f172a,#1e293b);
+            color: white;
+            text-align: center;
+        }
+
+        h1 {
+            margin-top: 20px;
+        }
+
+        textarea {
+            width: 70%;
+            height: 160px;
+            margin-top: 15px;
+            border-radius: 10px;
+            padding: 12px;
+            font-size: 15px;
+            border: none;
+            outline: none;
+        }
+
+        button {
+            margin: 10px;
+            padding: 10px 18px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            background: #38bdf8;
+        }
+
+        button:hover {
+            background: #0ea5e9;
+        }
+
+        .box {
+            width: 80%;
+            margin: 20px auto;
+            background: white;
+            color: black;
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+
+        th {
+            background: #1e3a8a;
+            color: white;
+        }
+
+        .count {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>🚀 Mini Compiler - Lexical Analyzer</h1>
+
+<textarea id="code" placeholder="Write code like: int a = 10;"></textarea><br>
+
+<button onclick="analyze()">Analyze</button>
+<button onclick="clearAll()">Clear</button>
+
+<div class="box">
+    <div class="count" id="count"></div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Token Type</th>
+                <th>Value</th>
+            </tr>
+        </thead>
+        <tbody id="output"></tbody>
+    </table>
+</div>
+
+<script>
+function analyze() {
+    const code = document.getElementById("code").value;
+
+    fetch("http://127.0.0.1:5000/analyze", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ code })
+    })
+    .then(res => res.json())
+    .then(data => {
+
+        console.log(data);
+
+        document.getElementById("count").innerText =
+            "Total Tokens: " + (data.count || 0);
+
+        const output = document.getElementById("output");
+        output.innerHTML = "";
+
+        if (!data.tokens || data.tokens.length === 0) {
+            output.innerHTML = `<tr><td colspan="2">No Tokens Found</td></tr>`;
+            return;
+        }
+
+        data.tokens.forEach(t => {
+
+            let color = "black";
+
+            if (t.type === "KEYWORD") color = "blue";
+            else if (t.type === "IDENTIFIER") color = "green";
+            else if (t.type === "NUMBER") color = "orange";
+            else if (t.type === "OPERATOR") color = "red";
+            else if (t.type === "SYMBOL") color = "gray";
+
+            const row = document.createElement("tr");
+
+            row.innerHTML = `
+                <td style="color:${color}; font-weight:bold">${t.type}</td>
+                <td style="color:${color}">${t.value}</td>
+            `;
+
+            output.appendChild(row);
+        });
+
+    })
+    .catch(err => {
+        console.log(err);
+        alert("Backend error occurred");
+    });
+}
+
+function clearAll() {
+    document.getElementById("code").value = "";
+    document.getElementById("output").innerHTML = "";
+    document.getElementById("count").innerText = "";
+}
+</script>
+
+</body>
+</html>
